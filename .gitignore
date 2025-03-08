@@ -1,0 +1,7 @@
+**/__pycache__/
+venv
+build
+deep_pmsm.egg-info
+pmsm/data/input/*
+pmsm/data/output/*
+pmsm/data/*.db
