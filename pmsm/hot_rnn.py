@@ -34,11 +34,11 @@ def main():
     dm.featurize()
 
     x_train = dm.tra_df[dm.x_cols + [dm.PROFILE_ID_COL]]
-    y_train = dm.tra_df[dm.y_cols]
+    y_train = dm.tra_df[dm.y_cols + [dm.PROFILE_ID_COL]]
     x_val = dm.val_df[dm.x_cols + [dm.PROFILE_ID_COL]]
-    y_val = dm.val_df[dm.y_cols]
+    y_val = dm.val_df[dm.y_cols + [dm.PROFILE_ID_COL]]
     x_tst = dm.tst_df[dm.x_cols + [dm.PROFILE_ID_COL]]
-    y_tst = dm.tst_df[dm.y_cols]
+    y_tst = dm.tst_df[dm.y_cols + [dm.PROFILE_ID_COL]]
 
     gc.collect()
 
@@ -85,6 +85,13 @@ def main():
                    'tbptt_len': cfg.keras_cfg['tbptt_len']}
 
     for result in trial_reports.conduct(cfg.keras_cfg['n_trials']):
+        KerasRegressor_config.pop('verbose', None)
+        KerasRegressor_config.pop('epochs', None)
+        KerasRegressor_config.pop('optimizer__learning_rate', None)
+        x_shape = (batch_size,
+                   cfg.keras_cfg['tbptt_len'],
+                   len(dm.x_cols))
+        KerasRegressor_config['x_shape'] = x_shape
         model = RNNKerasRegressor(**KerasRegressor_config)
 
         result.history = model.fit(**fit_cfg)
