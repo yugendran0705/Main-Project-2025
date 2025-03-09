@@ -43,7 +43,8 @@ data_cfg = {
 plot_cfg = {'do_plot': True, }
 
 keras_cfg = {
-    'early_stop_patience': 30,
+    # 'early_stop_patience': 30,
+    'early_stop_patience': 3,
     'n_trials': 3,
     'set_gpu_device': True,
     'gpu_auto_set': True,
@@ -53,19 +54,25 @@ keras_cfg = {
     'tbptt_len': 128,  # in half-seconds
     # x hrs sampled at half-seconds, required for chrono init in LSTMs
     'max_time_step': 2.4 * 60 * 60 * 2 / data_cfg['downsample_rate'],
-    'rnn_params': {'batch_size': -1,
-                   'activity_reg': 0.00003,
-                   'arch': 'res_lstm',
-                   'bias_reg': 0.00001,
-                   'clipnorm': 0.25,
-                   'clipvalue': 0.01,
-                   'dropout_rate': 0.3, 'epochs': 500,
-                   'gauss_noise_std': 0.01,
-                   'kernel_reg': 0.1,
-                   'lr_rate': 0.01,
-                   'n_layers': 1, 'n_units': 4,
+    'rnn_params': {
+                'batch_size': -1,
+                #    'activity_reg': 0.00003,
+                #    'arch': 'res_lstm',
+                #    'bias_reg': 0.00001,
+                #    'clipnorm': 0.25,
+                #    'clipvalue': 0.01,
+                #    'dropout_rate': 0.3, 
+                   'epochs': 500,
+                #    'gauss_noise_std': 0.01,
+                #    'kernel_reg': 0.1,
+                #    'lr_rate': 0.01,
+                #    'n_layers': 1, 
+                #    'n_units': 4,
+                    # 'loss': mean_squared_error,
                    'optimizer': 'adam',
-                   'recurrent_reg': 0.01},
+                    'optimizer__learning_rate': 0.01,
+                #    'recurrent_reg': 0.01
+                },
     'window_size': 32,  # lookback,
     'cnn_params': {'batch_size': 128,
                    'epochs': 250,

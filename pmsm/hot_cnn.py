@@ -82,8 +82,6 @@ def main():
                    'p_id_col': dm.PROFILE_ID_COL}
 
     for result in trial_reports.conduct(cfg.keras_cfg['n_trials']):
-        print(window_size, len(dm.x_cols)+1)
-        print(fit_cfg['x'].shape, fit_cfg['y'].shape)
         model = CNNKerasRegressor(xZero=window_size, xOne=len(dm.x_cols),
                                   **KerasRegressor_config)
         

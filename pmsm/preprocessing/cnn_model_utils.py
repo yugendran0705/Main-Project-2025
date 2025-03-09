@@ -176,7 +176,6 @@ class CNNKerasRegressor(KerasRegressor):
         no explicit downsampling is elaborated since CNNs do it implicitly
         within the window.
         """
-
         if _df_y is not None:
             # target vectors shall not contain p_id_col since they aren't
             # needed to build the sequences from loadprofile generator
