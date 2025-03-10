@@ -247,7 +247,6 @@ class LightDataManager(DataManager):
     def __init__(self, path, has_holdout=True, create_rolling_diffs=False,
                  create_lag_feats=False, standardize=True,
                  create_polynomials=False):
-        print('path ',path)
         super().__init__(path=path, create_holdout=has_holdout)
         self.downsample_rate = cfg.data_cfg['downsample_rate']
         self.rolling_lookback = cfg.data_cfg['rolling_lookback']
@@ -271,7 +270,7 @@ class LightDataManager(DataManager):
 
     def inverse_transform(self, df, cols_to_inverse=None):
         """If cols_to_inverse == None then assume target columns"""
-
+        print(df.shape)
         if isinstance(df, pd.DataFrame):
             if self.PROFILE_ID_COL in df.columns:
                 df = df.drop(self.PROFILE_ID_COL, axis=1)
@@ -279,6 +278,14 @@ class LightDataManager(DataManager):
 
         if len(df.shape) == 1:  # make at least 2 dim
             df = df.reshape([-1, 1])
+
+        if df.shape[1] == 1 and df.shape[0] % 4 == 0:
+            df = df.reshape(-1, 4)
+        else:
+            print("Reshape not possible due to mismatched dimensions!")
+
+        print("Expected y_cols:", self.y_cols)
+        print("Actual yhat_te shape:", df.shape)
 
         float_cols = self.x_cols + self.y_cols
         # df is numpy matrix

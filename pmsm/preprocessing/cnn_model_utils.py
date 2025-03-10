@@ -29,10 +29,10 @@ class CNNKerasRegressor(KerasRegressor):
 
     def save(self, uid):
         path = os.path.join(cfg.data_cfg['model_dump_path'],'cnn',uid)
-        # self.model.save(path + '.h)  # everything saved
-        self.model.save_weights(path + '.weights.h5')
-        with open(path + '_arch.json', 'w') as f:
-            f.write(self.model.to_json())
+        self.model.save(path + '.h')
+        # self.model.save_weights(path + '.weights.h5')
+        # with open(path + '_arch.json', 'w') as f:
+        #     f.write(self.model.to_json())
 
     def fit(self, x, y, **kwargs):
         assert isinstance(x, pd.DataFrame) and isinstance(y, pd.DataFrame),\

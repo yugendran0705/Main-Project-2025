@@ -6,6 +6,7 @@ warnings.filterwarnings("ignore")
 from preprocessing import config as cfg
 import os
 import gc
+import pandas as pd
 import numpy as np
 from preprocessing import select_gpu  # choose GPU through import
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
@@ -94,11 +95,12 @@ def main():
         KerasRegressor_config['x_shape'] = x_shape
         model = RNNKerasRegressor(**KerasRegressor_config)
 
-        result.history = model.fit(**fit_cfg)
-        model.reset_states()
-        result.model = model
+        result.history = model.fit(**fit_cfg)  
 
-        result.yhat_te = model.predict(x_tst, **predict_cfg)
+        if not isinstance(x_tst, pd.DataFrame):
+            x_tst = pd.DataFrame(x_tst) 
+        result.yhat_te = model.predict(x_tst, **predict_cfg)  
+
         result.yhat_te = dm.inverse_transform(result.yhat_te)
         result.actual = dm.inverse_transform(y_tst)
 

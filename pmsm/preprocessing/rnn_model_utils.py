@@ -29,15 +29,16 @@ class RNNKerasRegressor(KerasRegressor):
                 layer.reset_states()
 
     def save(self, uid):
-        path = os.path.join(cfg.data_cfg['model_dump_path'],'rnn' ,uid)
-        # self.model.save(path + '.h)  # everything saved
-        self.model.save_weights(path + '.weights.h5')
-        try:
-            with open(path + '_arch.json', 'w') as f:
-                f.write(self.model.to_json())
-        except TypeError as err:
-            print(err)
-            print('Model architecture will not be saved.')
+        path = os.path.join(cfg.data_cfg['model_dump_path'], 'rnn' ,uid)
+        self.model.save(path + '.h')  
+        # print("\nSaving at ",path)
+        # self.model.save_weights(path + '.weights.h5')
+        # try:
+        #     with open(path + '_arch.json', 'w') as f:
+        #         f.write(self.model.to_json())
+        # except TypeError as err:
+        #     print(err)
+        #     print('Model architecture will not be saved.')
 
     def fit(self, x, y, **kwargs):
         assert isinstance(x, pd.DataFrame) and isinstance(y, pd.DataFrame),\
@@ -85,7 +86,7 @@ class RNNKerasRegressor(KerasRegressor):
             data_cache.update({'data_cache': new_cache})
 
         history = self.model.fit(x, y, **kwargs)
-        self.model.reset_states()
+        # self.reset_states()
         return history
 
     def predict(self, x, **kwargs):
@@ -97,11 +98,12 @@ class RNNKerasRegressor(KerasRegressor):
         tbptt_len = kwargs.pop('tbptt_len', None)
         batch_size = kwargs['batch_size']
         batch_generation_cfg = {'p_id_col': p_id_col,
-                                'batch_size': batch_size,
+                                'batch_size': kwargs['batch_size'],
                                 'downsample_rate': downsample_rate,
                                 'tbptt_len': tbptt_len}
         x, sample_weights = self._generate_batches(x, **batch_generation_cfg)
-        yhat = super().predict(x, **kwargs)
+        # print('x keys in pred
+        yhat = self.model.predict(x, **kwargs)
 
         if len(yhat.shape) < 3:
             if tbptt_len == 1:
@@ -127,8 +129,8 @@ class RNNKerasRegressor(KerasRegressor):
         profiles = []
         # revert breakdown due to tbptt
         for idx_b, n_dummy in enumerate(n_dummies):
-            profile = np.vstack(yhat[idx_b + n, :, :] for n in
-                                range(0, yhat.shape[0], batch_size))
+            profile = np.vstack([yhat[idx_b + n, :, :] for n in
+                                range(0, yhat.shape[0], batch_size)])
             if n_dummy != 0:
                 profile = profile[:-n_dummy, :]
             profiles.append(profile)
@@ -143,10 +145,10 @@ class RNNKerasRegressor(KerasRegressor):
                 [profiles[p_i_sample+d_i] for d_i in
                           range(0, batch_size, original_batch_size)]
             max_len = len(max(samples_list, key=lambda x: len(x)))
-            samples_stack = np.dstack(np.pad(s,
-                   ((0, max_len - s.shape[0]), (0, 0)),
-                   mode='constant', constant_values=np.nan)
-                            for s in samples_list).transpose((2, 0, 1))
+            samples_stack = np.dstack([
+                np.pad(s, ((0, max_len - s.shape[0]), (0, 0)), mode='constant', constant_values=np.nan) 
+                for s in samples_list
+            ])
             samples_stack = samples_stack.reshape((-1, samples_stack.shape[2]),
                                                   order='F')
             samples_stack = samples_stack[~np.isnan(samples_stack)]\
@@ -158,17 +160,16 @@ class RNNKerasRegressor(KerasRegressor):
 
     def score(self, x, y, **kwargs):
         """This score func will return the loss"""
-        # sample weight needed
 
         if kwargs.pop('score_directly', False):
-            #  x = actual, y = prediction
+            # x = actual, y = prediction
             if np.any(np.isnan(y)):
                 loss = 9999  # NaN -> const.
             else:
-                loss = np.mean(K.eval(
-                    self.model.loss_functions[0](K.cast(x, np.float32),
-                                                 K.cast(y, np.float32))))
-            print(f'Loss: {loss:.6} K²'),
+                loss = np.mean(
+                    self.model.loss(y.astype(np.float32), x.astype(np.float32))
+                )
+            print(f'Loss: {loss:.6f} K²")')
             return loss
         else:
             p_id_col = kwargs.pop('p_id_col', 'p_id_col_not_found')
@@ -179,13 +180,12 @@ class RNNKerasRegressor(KerasRegressor):
                                     'batch_size': batch_size,
                                     'downsample_rate': downsample_rate,
                                     'tbptt_len': tbptt_len}
-            x, sample_weights = \
-                self._generate_batches(x, **batch_generation_cfg)
-            y, _ = \
-                self._generate_batches(y, **batch_generation_cfg)
+            x, sample_weights = self._generate_batches(x, **batch_generation_cfg)
+            y, _ = self._generate_batches(y, **batch_generation_cfg)
             kwargs['sample_weight'] = sample_weights
 
-            return super().score(x, y, **kwargs)
+            return self.score(x, y, **kwargs)
+
 
     @staticmethod
     def _generate_batches(_df, p_id_col, batch_size, downsample_rate,
@@ -447,7 +447,7 @@ class StateResetter(keras.callbacks.Callback):
 
     def on_batch_begin(self, batch, logs={}):
         if batch in self.profile_start_indices:
-            self.model.reset_states()
+            self.reset_states()
 
 
 class NaNCatcher(keras.callbacks.Callback):
