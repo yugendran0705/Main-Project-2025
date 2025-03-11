@@ -21,6 +21,10 @@ class RNNKerasRegressor(KerasRegressor):
     """ScikitLearn wrapper for keras models which incorporates
     batch-generation on top. This Class wraps RNN topologies."""
     def __init__(self, **kwargs):
+        kwargs.pop('build_fn', None)
+        kwargs.pop('verbose', None)
+        kwargs.pop('epochs', None)
+        kwargs.pop('optimizer__learning_rate', None)
         self.model = build_rnn_model(**kwargs)
 
     def reset_states(self):
@@ -29,16 +33,16 @@ class RNNKerasRegressor(KerasRegressor):
                 layer.reset_states()
 
     def save(self, uid):
-        path = os.path.join(cfg.data_cfg['model_dump_path'], 'rnn' ,uid)
-        self.model.save(path + '.h')  
+        path = os.path.join(cfg.data_cfg['model_dump_path'], uid)
+        # self.model.save(path + '.h')  
         # print("\nSaving at ",path)
-        # self.model.save_weights(path + '.weights.h5')
-        # try:
-        #     with open(path + '_arch.json', 'w') as f:
-        #         f.write(self.model.to_json())
-        # except TypeError as err:
-        #     print(err)
-        #     print('Model architecture will not be saved.')
+        self.model.save_weights(path + '.weights.h5')
+        try:
+            with open(path + '_arch.json', 'w') as f:
+                f.write(self.model.to_json())
+        except TypeError as err:
+            print(err)
+            print('Model architecture will not be saved.')
 
     def fit(self, x, y, **kwargs):
         assert isinstance(x, pd.DataFrame) and isinstance(y, pd.DataFrame),\
@@ -311,7 +315,7 @@ def build_rnn_model(x_shape=(100, 1, 10),
                       batch_size=64,
                       clipnorm=1.,
                       clipvalue=.5,
-                      n_gpus=0,
+                      n_gpus=1,
                       loss='mse',
                       ):
     """Build function for a keras RNN model"""
@@ -454,7 +458,7 @@ class NaNCatcher(keras.callbacks.Callback):
     NAN_CONST = float(9999)
 
     def on_epoch_end(self, epoch, logs=None):
-        if np.any(np.isnan(logs.get('loss', np.NaN))):
+        if np.any(np.isnan(logs.get('loss', np.nan))):
             self._stop_training(logs)
 
         val_loss = logs.get('val_loss', None)

@@ -22,17 +22,17 @@ class CNNKerasRegressor(KerasRegressor):
     """ScikitLearn wrapper for keras models which incorporates
     batch-generation on top. This Class wraps CNN topologies."""
 
-    def __init__(self, xZero=1,xOne=1, **kwargs):
+    def __init__(self, xZero=72,xOne=91, **kwargs):
         super().__init__(**kwargs)
         self.xZero = xZero
         self.xOne = xOne
 
     def save(self, uid):
-        path = os.path.join(cfg.data_cfg['model_dump_path'],'cnn',uid)
-        self.model.save(path + '.h')
-        # self.model.save_weights(path + '.weights.h5')
-        # with open(path + '_arch.json', 'w') as f:
-        #     f.write(self.model.to_json())
+        path = os.path.join(cfg.data_cfg['model_dump_path'],uid)
+        # self.model.save(path + '.h')
+        self.model.save_weights(path + '.weights.h5')
+        with open(path + '_arch.json', 'w') as f:
+            f.write(self.model.to_json())
 
     def fit(self, x, y, **kwargs):
         assert isinstance(x, pd.DataFrame) and isinstance(y, pd.DataFrame),\
@@ -85,13 +85,7 @@ class CNNKerasRegressor(KerasRegressor):
         """
         fit_args = kwargs.copy()
 
-        if build_cnn_model(x_shape=(self.xZero,self.xOne)) is None:
-            self.model = self.__call__(**kwargs)
-        elif (not isinstance(build_cnn_model(x_shape=(self.xZero,self.xOne)), types.FunctionType) and
-            not isinstance(build_cnn_model(x_shape=(self.xZero,self.xOne)), types.MethodType)):
-            self.model = build_cnn_model(x_shape=(self.xZero,self.xOne))
-        else:
-            self.model = build_cnn_model(x_shape=(self.xZero,self.xOne))
+        self.model = build_cnn_model(x_shape=(self.xZero, self.xOne))
 
         # Remove arguments not needed for fit()
         fit_args.pop('workers', None)

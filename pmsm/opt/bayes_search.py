@@ -15,7 +15,7 @@ from skopt.callbacks import check_callback
 from skopt.space import check_dimension
 from skopt.utils import point_asdict, eval_callbacks
 from sklearn.utils import check_random_state
-from sklearn.externals.joblib import Parallel, delayed
+from joblib import Parallel, delayed
 from skopt.callbacks import CheckpointSaver
 from skopt import load as skopt_load
 

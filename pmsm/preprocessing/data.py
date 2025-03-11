@@ -220,7 +220,7 @@ class DataManager(ABC):
             target_col = self.y_cols if y_hat.shape[1] > 1 else [self.y_cols[-1]]
             act = pd.concat(self.actual, axis=0, ignore_index=True)[target_col]
             assert set(act.columns.tolist()) == set(y_hat.columns.tolist()), 'ping!'
-        score = np.mean(K.eval(self.loss_func(act.values, y_hat.values)))
+        score = np.mean(self.loss_func(act.values, y_hat.values).numpy())
         print('{:}: {:.6} K²'.format(cfg.data_cfg['loss'], score))
         return score, act
 

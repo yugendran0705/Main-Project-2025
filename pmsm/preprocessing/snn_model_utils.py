@@ -2,23 +2,26 @@ import os
 import numpy as np
 import pandas as pd
 
-from keras.models import Sequential
-from keras.layers import AlphaDropout, GaussianNoise
-from keras.layers.core import Dense, Flatten
-import keras.optimizers as opts
-
-from keras import regularizers
-from keras import initializers
-from keras.wrappers.scikit_learn import KerasRegressor
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten, AlphaDropout, GaussianNoise
+from tensorflow.keras.optimizers import Adam, Nadam, Adamax, SGD, RMSprop
+from tensorflow.keras import regularizers, initializers
 
 import preprocessing.config as cfg
 
 
-class SNNKerasRegressor(KerasRegressor):
+class SNNKerasRegressor():
+    def __init__(self, **kwargs):
+        kwargs.pop('build_fn', None)
+        kwargs.pop('verbose', None)
+        kwargs.pop('epochs', None)
+        self.model = build_snn_model(**kwargs)
+
+
     def save(self, uid):
         path = os.path.join(cfg.data_cfg['model_dump_path'], uid)
         # self.model.save(path + '.h)  # everything saved
-        self.model.save_weights(path + '_weights.h5')
+        self.model.save_weights(path + '.weights.h5')
         with open(path + '_arch.json', 'w') as f:
             f.write(self.model.to_json())
 
@@ -33,12 +36,12 @@ class SNNKerasRegressor(KerasRegressor):
         kwargs['epochs'] = cfg.keras_cfg['snn_params']['epochs']
         kwargs['shuffle'] = True
 
-        return super().fit(X, y, **kwargs)
+        return self.model.fit(X, y, **kwargs)
 
     def predict(self, X, **kwargs):
         kwargs['batch_size'] = cfg.keras_cfg['snn_params']['batch_size']
         X = X.values.reshape(X.shape[0], 1, X.shape[1])
-        return super().predict(X, **kwargs)
+        return self.model.predict(X, **kwargs)
 
 
 def build_snn_model(x_shape=(100, 1, 10),
@@ -54,9 +57,9 @@ def build_snn_model(x_shape=(100, 1, 10),
                   n_gpus=0,):
     """build snn model"""
 
-    opts_map = {'adam': opts.Adam, 'nadam': opts.Nadam,
-                'adamax': opts.Adamax, 'sgd': opts.SGD,
-                'rmsprop': opts.RMSprop}
+    opts_map = {'adam': Adam, 'nadam': Nadam,
+                'adamax': Adamax, 'sgd': SGD,
+                'rmsprop': RMSprop}
 
     snn_cfg = {
         'units': int(n_units),
@@ -83,6 +86,6 @@ def build_snn_model(x_shape=(100, 1, 10),
     model.add(Flatten())  # todo: WHy lol
     model.add(Dense(len(cfg.data_cfg['Target_param_names'])))
 
-    opt = opts_map[optimizer](lr=lr_rate)
+    opt = opts_map[optimizer](learning_rate=lr_rate)
     model.compile(optimizer=opt, loss='mse')
     return model

@@ -19,7 +19,7 @@ from preprocessing.snn_model_utils import SNNKerasRegressor, build_snn_model
 SEED = cfg.data_cfg['random_seed']
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
-
+tf.config.run_functions_eagerly(True)
 
 def main():
     # config
@@ -64,8 +64,7 @@ def main():
 
     for result in trial_reports.conduct(cfg.keras_cfg['n_trials']):
         # create model
-        model = SNNKerasRegressor(build_fn=build_snn_model,
-                                  **KerasRegressor_config)
+        model = SNNKerasRegressor(**KerasRegressor_config)
 
         result.history = model.fit(**fit_cfg)
         result.model = model

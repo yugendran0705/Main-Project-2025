@@ -31,6 +31,15 @@ def main():
         cfg.keras_cfg['rnn_params']['epochs'] = 3
         cfg.keras_cfg['n_trials'] = 2
 
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            print("Memory growth enabled for GPUs")
+        except RuntimeError as e:
+            print(e)
+
     dm = LightDataManager(cfg.data_cfg['file_path'])
     dm.featurize()
 
