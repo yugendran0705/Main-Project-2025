@@ -1,4 +1,3 @@
 venv
-measures.csv
-processed_dataset.csv
+*.csv
 # *.h5
